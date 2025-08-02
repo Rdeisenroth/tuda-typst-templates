@@ -3,7 +3,7 @@
 )
 
 #show: tudaexercise.with(
-  language: "eng",
+  language: "en",
   info: (
     title: "Usage of TUDaExercise",
     subtitle: "A small guide.",
