@@ -10,9 +10,9 @@
     date: datetime.today(),
     department: [Department],
     institute: [Institute],
-    logo: text(fallback: true, size: 0.75in, emoji.cat.face)
+    logo: text(fallback: true, size: 0.75in, emoji.cat.face),
     //logo: image("tuda_logo.svg", height: 100%)
-  )
+  ),
 )
 
 #title-slide()

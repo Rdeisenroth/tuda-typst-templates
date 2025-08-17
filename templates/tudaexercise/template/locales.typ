@@ -1,7 +1,6 @@
 #let dict_de = (
   locale: "de",
   task: "Aufgabe",
-
   sheet: "Übungsblatt",
   group: "Übungsgruppe",
   tutor: "Tutor",
@@ -10,13 +9,12 @@
   point_plural: "Punkte",
   difficulty: "Schwierigkeitsgrad",
   term: "Semester",
-  date: "Abgabe"
+  date: "Abgabe",
 )
 
 #let dict_en = (
   locale: "en",
   task: "Task",
-
   sheet: "Sheet",
   group: "Exercise group",
   tutor: "Tutor",
@@ -25,7 +23,7 @@
   point_plural: "Points",
   difficulty: "Difficulty",
   term: "Term",
-  date: "Due"
+  date: "Due",
 )
 
 #let dicts = (

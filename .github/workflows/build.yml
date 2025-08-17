@@ -1,0 +1,125 @@
+# Typst document build workflow
+
+name: build
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push events for all branches
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    # automatically cancel the workflow if it runs longer than 10 minutes
+    timeout-minutes: 10
+    # The docker image to use for the container
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # 1. Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Set up Git repository
+        uses: actions/checkout@v4
+
+      # 2. Use font cache
+      - name: Cache fonts
+        id: cache-fonts
+        uses: actions/cache@v4
+        with:
+          path: |
+            /usr/share/fonts/truetype/fontawesome6
+            /usr/share/fonts/truetype/linlibertine
+            /usr/share/fonts/truetype/inconsolata
+            /usr/share/fonts/truetype/roboto
+            /usr/share/fonts/truetype/xcharter
+            /usr/share/fonts/truetype/noto-emoji
+          key: fonts-v3-${{ runner.os }}
+
+      # 2. install necessary fonts
+      - name: Install fonts
+        if: steps.cache-fonts.outputs.cache-hit != 'true'
+        run: |
+          wget https://mirrors.ctan.org/fonts/fontawesome6.zip
+          unzip fontawesome6.zip
+          mkdir -p /usr/share/fonts/truetype/fontawesome6
+          cp fontawesome6/opentype/* /usr/share/fonts/truetype/fontawesome6/
+          wget https://downloads.sourceforge.net/project/linuxlibertine/linuxlibertine/5.3.0/LinLibertineTTF_5.3.0_2012_07_02.tgz
+          mkdir linlibertine && tar -xzvf LinLibertineTTF_5.3.0_2012_07_02.tgz -C linlibertine
+          mkdir -p /usr/share/fonts/truetype/linlibertine
+          cp linlibertine/*.ttf /usr/share/fonts/truetype/linlibertine/
+          wget -O inconsolata.zip https://github.com/googlefonts/Inconsolata/releases/download/v3.000/fonts_ttf.zip
+          unzip inconsolata.zip -d inconsolata
+          mkdir -p /usr/share/fonts/truetype/inconsolata
+          cp inconsolata/fonts/ttf/* /usr/share/fonts/truetype/inconsolata/
+          wget https://mirrors.ctan.org/fonts/roboto.zip
+          unzip roboto.zip
+          mkdir -p /usr/share/fonts/truetype/roboto
+          cp roboto/opentype/* /usr/share/fonts/truetype/roboto/
+          wget https://mirrors.ctan.org/fonts/xcharter.zip
+          unzip xcharter.zip
+          mkdir -p /usr/share/fonts/truetype/xcharter
+          cp xcharter/opentype/* /usr/share/fonts/truetype/xcharter
+          wget https://mirrors.ctan.org/fonts/noto-emoji.zip
+          unzip noto-emoji.zip
+          mkdir -p /usr/share/fonts/truetype/noto-emoji
+          cp noto-emoji/*.ttf /usr/share/fonts/truetype/noto-emoji
+          sudo apt-get update
+          sudo apt-get install -y \
+          fonts-dejavu-core fonts-dejavu-extra \
+          fonts-noto-core
+          fc-cache -fv
+
+      # 3. Install TU Logo
+      - name: Cache logo
+        id: cache-logo
+        uses: actions/cache@v4
+        with:
+          path: assets/logos/tuda_logo.svg
+          key: tuda-logo-svg
+
+      - name: Set up Docker Buildx
+        if: steps.cache-logo.outputs.cache-hit != 'true'
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Dockerfile.logo
+        if: steps.cache-logo.outputs.cache-hit != 'true'
+        run: docker buildx build --output assets/logos -f .github/Dockerfile.logo .github
+
+      # 4. Set up Typst
+      - uses: typst-community/setup-typst@v4
+        # with:
+        #   cache-dependency-path: requirements.typ
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - run: pip install pathspec toml
+
+      - name: install template
+        run: yes | python ./scripts/publish.py --local
+
+      # 5. Build the document
+      - name: Typst
+        run: |
+          typst compile --pdf-standard a-2b templates_examples/tudapub/main.typ
+          typst compile --pdf-standard a-2b templates_examples/tudaexercise/main.typ
+          typst compile --pdf-standard a-2b templates_examples/not-tudabeamer-2023/main.typ
+
+      # 6. Upload artifacts to GitHub
+      - name: Upload artifacts to GitHub
+        #if: ${{ !env.ACT }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: PDF
+          path: "*.pdf"
+          if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`

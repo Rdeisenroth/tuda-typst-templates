@@ -4,19 +4,22 @@
   left: 0.39in,
   right: 0.34in,
   top: 1.2in,
-  bottom: 0.33in
+  bottom: 0.33in,
 )
 
 #let show-copyright = state("show-copyright", false)
 
 #let figure-with-copyright(copyright: none, caption: none, ..args) = {
-  figure(caption: context [
-    #if show-copyright.get() {
-      copyright
-    } else {
-      caption
-    }
-  ], ..args)
+  figure(
+    caption: context [
+      #if show-copyright.get() {
+        copyright
+      } else {
+        caption
+      }
+    ],
+    ..args,
+  )
 }
 
 #let header-font(..args) = {
@@ -56,10 +59,17 @@
   align: (bottom + left, bottom + center, bottom + right),
   footer-font(utils.display-info-date(self)),
   footer-font(self.info.department + " | " + self.info.institute + " | " + self.info.short-author),
-  footer-font(context utils.slide-counter.display() ),
+  footer-font(context utils.slide-counter.display()),
 ))
 
-#let slide(title: auto, config: (:), repeat: auto, setting: body => body, composer: auto, ..bodies) = touying-slide-wrapper(self => {
+#let slide(
+  title: auto,
+  config: (:),
+  repeat: auto,
+  setting: body => body,
+  composer: auto,
+  ..bodies,
+) = touying-slide-wrapper(self => {
   let self = utils.merge-dicts(
     self,
     config-common(subslide-preamble: self => {
@@ -68,13 +78,15 @@
         below: 0.24in,
         width: 100% - 2in,
         align(bottom)[
-          #slide-title-font(upper(if title != auto { title } else { utils.display-current-heading(depth: self.slide-level) }))
-        ]
+          #slide-title-font(upper(if title != auto { title } else {
+            utils.display-current-heading(depth: self.slide-level)
+          }))
+        ],
       )
     }),
   )
   touying-slide(self: self, config: config, repeat: repeat, setting: setting, composer: composer, ..bodies)
- })
+})
 
 #let title-slide(..args) = touying-slide-wrapper(self => {
   self.store.enable-header = false
@@ -85,7 +97,7 @@
       rows: (
         2.76in - margin.top,
         1.18in,
-        1.6in
+        1.6in,
       ),
       gutter: (0in, 0.2in),
       grid.cell([]),
@@ -103,7 +115,7 @@
       rows: (
         4.32in - margin.top,
         1.18in,
-        1.18in
+        1.18in,
       ),
       gutter: (0in, 0.05in),
       grid.cell([]),
@@ -115,18 +127,17 @@
 })
 
 #let d-outline() = context {
-   let elems = query(
-    heading.where(level: 1, outlined: true)
+  let elems = query(
+    heading.where(level: 1, outlined: true),
   )
   set enum(numbering: n => title-font[#n], spacing: 0.4in, body-indent: 0.25in)
   show enum: set align(horizon)
-  v(2.91in-1.18in-margin.top)
-  columns(2,
-    for (i, section) in elems.enumerate() {
+  v(2.91in - 1.18in - margin.top)
+  columns(2, for (i, section) in elems.enumerate() {
     {
-        enum.item(i + 1, section.body)
-      }
-      parbreak()
+      enum.item(i + 1, section.body)
+    }
+    parbreak()
   })
 }
 
@@ -153,7 +164,7 @@
     config-common(
       slide-fn: slide,
       new-section-slide-fn: new-section-slide,
-      datetime-format: "[day].[month].[year]"
+      datetime-format: "[day].[month].[year]",
     ),
     config-methods(init: (self: none, body) => {
       set document(title: self.info.title + " " + self.info.subtitle, author: self.info.author, date: self.info.date)
